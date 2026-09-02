@@ -3,6 +3,7 @@ import "./globals.css";
 
 import Header from "./components/Header";
 import ThemeProvider from "./components/ThemeProvider";
+import { CartProvider } from "./context/CartContext";
 
 export const metadata: Metadata = {
   title: "Cireng A & R Seyegan",
@@ -16,8 +17,10 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <Header />
-          {children}
+          <CartProvider>
+            <Header />
+            {children}
+          </CartProvider>
         </ThemeProvider>
       </body>
     </html>
