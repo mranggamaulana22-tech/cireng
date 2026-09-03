@@ -15,7 +15,6 @@ export default function CheckoutPage() {
   const [note, setNote] = useState("");
   const [payment, setPayment] = useState<"COD" | "QRIS">("COD");
 
-  // Ambil nama tersimpan dari checkout sebelumnya (kalau ada) — sesuai PRD Bab 19.2
   useEffect(() => {
     const savedName = localStorage.getItem(NAME_STORAGE_KEY);
     if (savedName) {
@@ -23,7 +22,6 @@ export default function CheckoutPage() {
     }
   }, []);
 
-  // Kalau keranjang kosong, jangan biarkan user ada di halaman checkout
   useEffect(() => {
     if (items.length === 0) {
       router.replace("/menu");
@@ -36,7 +34,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Simpan nama untuk auto-fill di checkout berikutnya
     localStorage.setItem(NAME_STORAGE_KEY, name);
 
     const orderCode = generateOrderCode();
@@ -67,6 +64,20 @@ Terima kasih 🙏`;
     const waUrl = `https://wa.me/${BUSINESS_WHATSAPP_NUMBER}?text=${encodeURIComponent(
       message
     )}`;
+
+    const orderRecord = {
+      orderCode,
+      name,
+      items,
+      subtotal,
+      payment,
+      note,
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem(
+      `cireng-ar-order-${orderCode}`,
+      JSON.stringify(orderRecord)
+    );
 
     clearCart();
     window.location.href = waUrl;
