@@ -1,8 +1,8 @@
 import Link from "next/link";
-import StoreStatusCard from "./components/StoreStatusCard";
-import AnnouncementBoard from "./components/AnnouncementBoard";
-import LocationTodayCard from "./components/LocationTodayCard";
-import MenuPreview from "./components/MenuPreview";
+import StoreStatusCard from "../components/StoreStatusCard";
+import AnnouncementBoard from "../components/AnnouncementBoard";
+import LocationTodayCard from "../components/LocationTodayCard";
+import MenuPreview from "../components/MenuPreview";
 
 export default function Home() {
   return (

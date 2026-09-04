@@ -1,8 +1,8 @@
 "use client";
 
-import { Product } from "../data/products";
-import { useCart } from "../context/CartContext";
-import ProductImage from "../components/ProductImage";
+import { Product } from "../../data/products";
+import { useCart } from "../../context/CartContext";
+import ProductImage from "../../components/ProductImage";
 
 export default function MenuList({ products }: { products: Product[] }) {
   const { items, addItem, updateQuantity } = useCart();

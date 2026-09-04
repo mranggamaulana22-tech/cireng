@@ -1,6 +1,6 @@
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import MenuList from "./MenuList";
-import { Product } from "../data/products";
+import { Product } from "../../data/products";
 
 export default async function MenuPage() {
   const { data: products, error } = await supabase

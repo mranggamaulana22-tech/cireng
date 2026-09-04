@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { todaysLocation } from "../data/location";
+import { todaysLocation } from "../../data/location";
 
 export default function LokasiHariIniPage() {
   return (

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "../context/CartContext";
-import { generateOrderCode, BUSINESS_WHATSAPP_NUMBER } from "../data/orderUtils";
+import { useCart } from "../../context/CartContext";
+import { generateOrderCode, BUSINESS_WHATSAPP_NUMBER } from "../../data/orderUtils";
 
 const NAME_STORAGE_KEY = "cireng-ar-customer-name";
 
