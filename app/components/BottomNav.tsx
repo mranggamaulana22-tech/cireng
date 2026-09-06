@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { Home, UtensilsCrossed, ShoppingCart, Menu as MenuIcon } from "lucide-react";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -14,6 +14,7 @@ export default function BottomNav() {
     { href: "/", label: "Beranda", icon: Home },
     { href: "/menu", label: "Menu", icon: UtensilsCrossed },
     { href: "/cart", label: "Keranjang", icon: ShoppingCart },
+    { href: "/lainnya", label: "Lainnya", icon: MenuIcon },
   ];
 
   return (

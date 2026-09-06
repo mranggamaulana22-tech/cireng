@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { computeIsOpen } from "../lib/storeStatusHelper";
 
 export default async function StoreStatusCard() {
   const { data: storeStatus } = await supabase
@@ -11,7 +12,7 @@ export default async function StoreStatusCard() {
     return null;
   }
 
-  const isOpen = storeStatus.status === "OPEN";
+  const isOpen = computeIsOpen(storeStatus);
 
   return (
     <div
@@ -37,7 +38,7 @@ export default async function StoreStatusCard() {
       </div>
       <p className="text-sm text-foreground/70 mt-1">
         {isOpen
-          ? storeStatus.message
+          ? storeStatus.message || "Sedang menerima pesanan"
           : storeStatus.message || "Pesanan online sedang tidak tersedia."}
       </p>
       <p className="text-xs text-foreground/50 mt-1">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
+import { computeIsOpen } from "../../lib/storeStatusHelper";
 
 type StoreStatus = {
   id: number;
@@ -114,27 +115,36 @@ export default function AdminStatusPage() {
 
       <div className="border border-border rounded-lg p-4 flex flex-col gap-3">
         <div>
-          <p className="text-sm text-foreground/70 mb-1">Status</p>
-          <div className="flex gap-3">
-            {["OPEN", "CLOSED"].map((option) => (
+          <p className="text-sm text-foreground/70 mb-1">Mode Status</p>
+          <div className="flex gap-3 flex-wrap">
+            {[
+              { value: "AUTO", label: "Otomatis" },
+              { value: "OPEN", label: "Paksa Buka" },
+              { value: "CLOSED", label: "Paksa Tutup" },
+            ].map((option) => (
               <label
-                key={option}
+                key={option.value}
                 className="flex items-center gap-2 text-sm text-foreground"
               >
                 <input
                   type="radio"
                   name="storeStatusRadio"
-                  checked={storeStatus?.status === option}
+                  checked={storeStatus?.status === option.value}
                   onChange={() =>
                     setStoreStatus((prev) =>
-                      prev ? { ...prev, status: option } : prev
+                      prev ? { ...prev, status: option.value } : prev
                     )
                   }
                 />
-                {option === "OPEN" ? "Buka" : "Tutup"}
+                {option.label}
               </label>
             ))}
           </div>
+          {storeStatus?.status === "AUTO" && (
+            <p className="text-xs text-foreground/50 mt-2">
+              Status akan otomatis mengikuti Jam Buka dan Jam Tutup di bawah.
+            </p>
+          )}
         </div>
 
         <div>
@@ -184,6 +194,21 @@ export default function AdminStatusPage() {
             />
           </div>
         </div>
+
+        {storeStatus && (
+          <p className="text-sm text-foreground/70">
+            Status saat ini akan tampil sebagai:{" "}
+            <span
+              className={
+                computeIsOpen(storeStatus)
+                  ? "text-success font-semibold"
+                  : "text-foreground/50 font-semibold"
+              }
+            >
+              {computeIsOpen(storeStatus) ? "Buka" : "Tutup"}
+            </span>
+          </p>
+        )}
 
         <button
           onClick={handleSaveStatus}

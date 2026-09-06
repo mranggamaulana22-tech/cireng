@@ -16,6 +16,12 @@ const adminMenu = [
     title: "Lokasi Hari Ini",
     description: "Atur lokasi jualan harian",
   },
+  {
+    href: "/admin/feedback",
+    title: "Saran & Masukan",
+    description: "Lihat saran dan masukan dari pelanggan",
+  },
+  
 ];
 
 export default function AdminDashboardPage() {
