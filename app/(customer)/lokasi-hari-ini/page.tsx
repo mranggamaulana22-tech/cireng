@@ -1,7 +1,29 @@
-import Link from "next/link";
-import { todaysLocation } from "../../data/location";
+export const dynamic = "force-dynamic";
 
-export default function LokasiHariIniPage() {
+import Link from "next/link";
+import { supabase } from "../../lib/supabase";
+
+export default async function LokasiHariIniPage() {
+  const { data: location } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+
+  if (!location) {
+    return (
+      <main className="max-w-2xl mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          Lokasi Hari Ini
+        </h1>
+        <p className="text-foreground/60">
+          Informasi lokasi belum tersedia untuk hari ini.
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">
@@ -10,14 +32,14 @@ export default function LokasiHariIniPage() {
 
       <div className="border border-border rounded-lg p-5">
         <p className="text-lg font-semibold text-foreground">
-          {todaysLocation.locationName}
+          {location.location_name}
         </p>
         <p className="text-foreground/70 mt-1">
-          {todaysLocation.startTime} - {todaysLocation.endTime}
+          {location.start_time} - {location.end_time}
         </p>
-        {todaysLocation.note && (
+        {location.description && (
           <p className="text-sm text-foreground/50 mt-2">
-            {todaysLocation.note}
+            {location.description}
           </p>
         )}
       </div>

@@ -1,18 +1,29 @@
 import Link from "next/link";
-import { todaysLocation } from "../data/location";
+import { supabase } from "../lib/supabase";
 
-export default function LocationTodayCard() {
+export default async function LocationTodayCard() {
+  const { data: location } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+
+  if (!location) {
+    return null;
+  }
+
   return (
     <div className="rounded-lg border border-border p-4">
       <p className="font-semibold text-foreground">Lokasi Hari Ini</p>
-      <p className="text-sm text-foreground mt-1">
-        {todaysLocation.locationName}
-      </p>
+      <p className="text-sm text-foreground mt-1">{location.location_name}</p>
       <p className="text-sm text-foreground/70">
-        {todaysLocation.startTime} - {todaysLocation.endTime}
+        {location.start_time} - {location.end_time}
       </p>
-      {todaysLocation.note && (
-        <p className="text-xs text-foreground/50 mt-1">{todaysLocation.note}</p>
+      {location.description && (
+        <p className="text-xs text-foreground/50 mt-1">
+          {location.description}
+        </p>
       )}
       <Link
         href="/lokasi-hari-ini"
