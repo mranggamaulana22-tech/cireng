@@ -7,6 +7,7 @@ export default async function MenuPreview() {
     .from("products")
     .select("*")
     .eq("is_available", true)
+    .eq("is_featured", true)
     .order("id")
     .limit(4);
 

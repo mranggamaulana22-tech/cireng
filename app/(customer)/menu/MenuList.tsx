@@ -70,20 +70,20 @@ export default function MenuList({ products }: { products: Product[] }) {
               </div>
 
               {product.is_available && (
-                <div className="flex items-center justify-center gap-4 mt-3 border border-border rounded-md py-1.5">
+                <div className="flex items-center justify-between mt-3 py-1">
                   <button
                     onClick={() => decrease(product.id)}
                     disabled={qty === 0}
-                    className="w-7 h-7 flex items-center justify-center text-foreground hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed text-lg"
+                    className="w-7 h-7 flex items-center justify-center rounded-md bg-foreground/5 text-foreground text-base font-medium active:scale-90 active:bg-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-transform"
                   >
-                    -
+                    −
                   </button>
-                  <span className="w-6 text-center text-foreground font-medium">
+                  <span className="text-center text-foreground font-semibold text-sm min-w-[20px]">
                     {qty}
                   </span>
                   <button
                     onClick={() => increase(product)}
-                    className="w-7 h-7 flex items-center justify-center text-foreground hover:text-primary text-lg"
+                    className="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-primary-foreground text-base font-medium active:scale-90 transition-transform"
                   >
                     +
                   </button>

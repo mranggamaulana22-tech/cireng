@@ -43,19 +43,19 @@ export default function CartPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex items-center border border-border rounded-md">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="w-8 h-8 flex items-center justify-center text-foreground hover:text-primary"
+                  className="w-7 h-7 flex items-center justify-center rounded-md bg-foreground/5 text-foreground text-base font-medium active:scale-90 active:bg-primary/20 transition-transform"
                 >
-                  -
+                  −
                 </button>
-                <span className="w-8 text-center text-foreground">
+                <span className="text-center text-foreground font-semibold text-sm min-w-[20px]">
                   {item.quantity}
                 </span>
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-foreground hover:text-primary"
+                  className="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-primary-foreground text-base font-medium active:scale-90 transition-transform"
                 >
                   +
                 </button>

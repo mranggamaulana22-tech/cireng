@@ -10,6 +10,7 @@ type Product = {
   price: number;
   description: string;
   is_available: boolean;
+  is_featured: boolean;
 };
 
 const emptyForm = {
@@ -76,7 +77,9 @@ export default function AdminProductsPage() {
     if (editingId) {
       await supabase.from("products").update(payload).eq("id", editingId);
     } else {
-      await supabase.from("products").insert({ ...payload, is_available: true });
+      await supabase
+        .from("products")
+        .insert({ ...payload, is_available: true, is_featured: false });
     }
 
     setSaving(false);
@@ -90,6 +93,14 @@ export default function AdminProductsPage() {
     await supabase
       .from("products")
       .update({ is_available: !product.is_available })
+      .eq("id", product.id);
+    loadProducts();
+  }
+
+  async function toggleFeatured(product: Product) {
+    await supabase
+      .from("products")
+      .update({ is_featured: !product.is_featured })
       .eq("id", product.id);
     loadProducts();
   }
@@ -192,7 +203,12 @@ export default function AdminProductsPage() {
             className="border border-border rounded-lg p-3 flex items-center justify-between"
           >
             <div>
-              <p className="font-medium text-foreground">{product.name}</p>
+              <p className="font-medium text-foreground">
+                {product.name}{" "}
+                {product.is_featured && (
+                  <span className="text-primary">★</span>
+                )}
+              </p>
               <p className="text-sm text-foreground/60">
                 Rp{product.price.toLocaleString("id-ID")}
               </p>
@@ -217,6 +233,16 @@ export default function AdminProductsPage() {
                 className="text-xs text-foreground/60 hover:underline"
               >
                 Toggle Stok
+              </button>
+              <button
+                onClick={() => toggleFeatured(product)}
+                className={`text-xs hover:underline ${
+                  product.is_featured
+                    ? "text-primary font-medium"
+                    : "text-foreground/60"
+                }`}
+              >
+                {product.is_featured ? "★ Populer" : "Jadikan Populer"}
               </button>
               <button
                 onClick={() => handleDelete(product.id)}

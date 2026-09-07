@@ -14,7 +14,7 @@ export default function TentangPage() {
         </p>
         <p>
           Semua produk kami dibuat dengan resep rumahan, tanpa bahan
-          pengawet, dan selalu diusahakan fresh setiap harinya. Dari cireng
+          pengawet, dan selalu fresh setiap harinya. Dari cireng
           isi ayam suwir, bakso, sosis, keju, hingga cipuk dan telur gulung —
           setiap produk kami buat dengan standar rasa yang konsisten.
         </p>
