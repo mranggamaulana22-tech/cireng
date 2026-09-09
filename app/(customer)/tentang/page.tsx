@@ -1,3 +1,10 @@
+
+export const metadata = {
+  title: "Tentang Kami",
+  description:
+    "Kenali cerita Cireng A&R Seyegan, usaha jajanan rumahan yang melayani area Seyegan, Sleman dengan resep rumahan tanpa pengawet.",
+};
+
 export default function TentangPage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">

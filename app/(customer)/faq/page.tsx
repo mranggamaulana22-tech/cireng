@@ -1,3 +1,9 @@
+export const metadata = {
+  title: "Pertanyaan Umum",
+  description:
+    "Temukan jawaban seputar cara pesan, metode pembayaran, minimum order, dan area delivery Cireng A&R Seyegan.",
+};
+
 const faqList = [
   {
     question: "Berapa minimum order untuk delivery?",

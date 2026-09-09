@@ -1,5 +1,10 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Lokasi Hari Ini",
+  description: "Cek lokasi jualan Cireng A&R Seyegan hari ini.",
+};
+
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 

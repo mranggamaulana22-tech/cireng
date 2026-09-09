@@ -1,5 +1,10 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Pengumuman",
+  description: "Info terbaru, promo, dan pengumuman dari Cireng A&R Seyegan.",
+};
+
 import { supabase } from "../../lib/supabase";
 
 const typeLabel: Record<string, string> = {

@@ -2,6 +2,12 @@ import { supabase } from "../../lib/supabase";
 import MenuList from "./MenuList";
 import { Product } from "../../data/products";
 
+export const metadata = {
+  title: "Menu",
+  description:
+    "Lihat menu lengkap Cireng A&R Seyegan: cireng ayam suwir, bakso, sosis, keju, cipuk, dan telur gulung. Harga mulai Rp1.000.",
+};
+
 export default async function MenuPage() {
   const { data: products, error } = await supabase
     .from("products")
