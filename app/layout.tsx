@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import ThemeProvider from "./components/ThemeProvider";
 import { CartProvider } from "./context/CartContext";
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   },
   description:
     "Cireng A&R Seyegan menyediakan aneka cireng isi ayam suwir, bakso, sosis, keju, cipuk, dan telur gulung. Pesan online, kami antar ke area Seyegan.",
-  metadataBase: new URL("https://cirengar.com"),
+  metadataBase: new URL("https://cireng-five.vercel.app"),
   manifest: "/manifest.json",
 };
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <ThemeProvider>
           <CartProvider>{children}</CartProvider>
         </ThemeProvider>
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </body>
     </html>
   );
