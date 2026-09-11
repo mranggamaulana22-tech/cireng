@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Info, Megaphone, HelpCircle, MessageSquareText, Phone } from "lucide-react";
+import InstallButton from "../../components/InstallButton";
 
 const menuItems = [
   { href: "/tentang", label: "Tentang Kami", icon: Info },
@@ -13,6 +14,10 @@ export default function LainnyaPage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Lainnya</h1>
+
+      <div className="mb-4">
+        <InstallButton />
+      </div>
 
       <div className="flex flex-col rounded-lg border border-border overflow-hidden">
         {menuItems.map((item, index) => {
