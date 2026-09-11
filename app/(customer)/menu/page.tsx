@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { supabase } from "../../lib/supabase";
 import MenuList from "./MenuList";
 import { Product } from "../../data/products";
