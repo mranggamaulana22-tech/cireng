@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description:
     "Cireng A&R Seyegan menyediakan aneka cireng isi ayam suwir, bakso, sosis, keju, cipuk, dan telur gulung. Pesan online, kami antar ke area Seyegan.",
   metadataBase: new URL("https://cirengar.com"),
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
