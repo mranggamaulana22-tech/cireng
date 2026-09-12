@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { supabase } from "./lib/supabase";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://cirengar.com";
+  const baseUrl = "https://cireng-five.vercel.app";
 
   const staticPages = [
     "",
