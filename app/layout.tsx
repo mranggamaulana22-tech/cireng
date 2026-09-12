@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     "Cireng A&R Seyegan menyediakan aneka cireng isi ayam suwir, bakso, sosis, keju, cipuk, dan telur gulung. Pesan online, kami antar ke area Seyegan.",
   metadataBase: new URL("https://cireng-five.vercel.app"),
   manifest: "/manifest.json",
+  verification: {
+    google: "gzNcRUCwD9xkS6t91cEk5oNZp3aD92yFazwdPlHv2hA",
+  },
 };
 
 export default function RootLayout({
