@@ -10,6 +10,8 @@ type StoreStatus = {
   message: string;
   operating_open_time: string;
   operating_close_time: string;
+  delivery_fee_regular: number;
+  delivery_fee_express: number;
 };
 
 type Announcement = {
@@ -66,6 +68,8 @@ export default function AdminStatusPage() {
         message: storeStatus.message,
         operating_open_time: storeStatus.operating_open_time,
         operating_close_time: storeStatus.operating_close_time,
+        delivery_fee_regular: storeStatus.delivery_fee_regular,
+        delivery_fee_express: storeStatus.delivery_fee_express,
       })
       .eq("id", storeStatus.id);
 
@@ -190,6 +194,43 @@ export default function AdminStatusPage() {
                 )
               }
               placeholder="18.00"
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <p className="text-sm text-foreground/70 mb-1">
+              Ongkir Reguler
+            </p>
+            <input
+              type="number"
+              value={storeStatus?.delivery_fee_regular ?? 0}
+              onChange={(e) =>
+                setStoreStatus((prev) =>
+                  prev
+                    ? { ...prev, delivery_fee_regular: Number(e.target.value) }
+                    : prev
+                )
+              }
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-foreground/70 mb-1">
+              Ongkir Express
+            </p>
+            <input
+              type="number"
+              value={storeStatus?.delivery_fee_express ?? 0}
+              onChange={(e) =>
+                setStoreStatus((prev) =>
+                  prev
+                    ? { ...prev, delivery_fee_express: Number(e.target.value) }
+                    : prev
+                )
+              }
               className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
             />
           </div>

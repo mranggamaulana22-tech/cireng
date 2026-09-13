@@ -4,16 +4,24 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../context/CartContext";
 import { generateOrderCode, BUSINESS_WHATSAPP_NUMBER } from "../../data/orderUtils";
+import { createClient } from "../../lib/supabase/client";
 
 const NAME_STORAGE_KEY = "cireng-ar-customer-name";
+
+type DeliveryType = "REGULER" | "EXPRESS";
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
+  const supabase = createClient();
 
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const [payment, setPayment] = useState<"COD" | "QRIS">("COD");
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>("REGULER");
+
+  const [feeRegular, setFeeRegular] = useState(0);
+  const [feeExpress, setFeeExpress] = useState(5000);
 
   useEffect(() => {
     const savedName = localStorage.getItem(NAME_STORAGE_KEY);
@@ -23,10 +31,29 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    async function loadFees() {
+      const { data } = await supabase
+        .from("store_status")
+        .select("delivery_fee_regular, delivery_fee_express")
+        .limit(1)
+        .single();
+
+      if (data) {
+        setFeeRegular(data.delivery_fee_regular ?? 0);
+        setFeeExpress(data.delivery_fee_express ?? 5000);
+      }
+    }
+    loadFees();
+  }, []);
+
+  useEffect(() => {
     if (items.length === 0) {
       router.replace("/menu");
     }
   }, [items, router]);
+
+  const deliveryFee = deliveryType === "EXPRESS" ? feeExpress : feeRegular;
+  const total = subtotal + deliveryFee;
 
   function handleSubmit() {
     if (!name.trim()) {
@@ -42,6 +69,13 @@ export default function CheckoutPage() {
       .map((item) => `- ${item.name} x${item.quantity}`)
       .join("\n");
 
+    const deliveryLabel =
+      deliveryType === "EXPRESS"
+        ? `Express (Rp${feeExpress.toLocaleString("id-ID")})`
+        : feeRegular > 0
+        ? `Reguler (Rp${feeRegular.toLocaleString("id-ID")})`
+        : "Reguler (Gratis)";
+
     const message = `Halo Cireng A & R 👋
 
 Saya ingin memesan:
@@ -52,8 +86,9 @@ Nama: ${name}
 Pesanan:
 ${itemLines}
 
-Total: Rp${subtotal.toLocaleString("id-ID")}
-Pengiriman: Delivery Seyegan
+Subtotal: Rp${subtotal.toLocaleString("id-ID")}
+Pengiriman: ${deliveryLabel}
+Total: Rp${total.toLocaleString("id-ID")}
 Pembayaran: ${payment}
 ${note ? `\nCatatan: ${note}` : ""}
 
@@ -70,6 +105,9 @@ Terima kasih 🙏`;
       name,
       items,
       subtotal,
+      deliveryType,
+      deliveryFee,
+      total,
       payment,
       note,
       createdAt: new Date().toISOString(),
@@ -112,15 +150,74 @@ Terima kasih 🙏`;
         </div>
 
         <div>
-          <h2 className="font-semibold text-foreground mb-2">2. Delivery</h2>
-          <div className="border border-border rounded-md p-3 bg-foreground/5">
-            <p className="text-sm font-medium text-foreground">
-              Delivery Seyegan - Gratis
-            </p>
-            <p className="text-xs text-foreground/60 mt-1">
-              Estimasi dikonfirmasi via WhatsApp.
-            </p>
+          <h2 className="font-semibold text-foreground mb-2">
+            2. Jenis Pengiriman
+          </h2>
+
+          <div className="flex flex-col gap-2">
+            <label
+              className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                deliveryType === "REGULER"
+                  ? "border-primary bg-primary/5"
+                  : "border-border"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    checked={deliveryType === "REGULER"}
+                    onChange={() => setDeliveryType("REGULER")}
+                  />
+                  <span className="font-medium text-foreground text-sm">
+                    Reguler
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-primary">
+                  {feeRegular > 0
+                    ? `Rp${feeRegular.toLocaleString("id-ID")}`
+                    : "Gratis"}
+                </span>
+              </div>
+              <p className="text-xs text-foreground/60 mt-1.5 ml-6">
+                Gratis ongkir selama masa promo launching. Pengiriman
+                mengikuti rute pengantaran, jadi persiapan bisa sedikit lebih
+                lama karena digabung dengan pesanan lain di rute yang sama.
+              </p>
+            </label>
+
+            <label
+              className={`border rounded-md p-3 cursor-pointer transition-colors ${
+                deliveryType === "EXPRESS"
+                  ? "border-primary bg-primary/5"
+                  : "border-border"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    checked={deliveryType === "EXPRESS"}
+                    onChange={() => setDeliveryType("EXPRESS")}
+                  />
+                  <span className="font-medium text-foreground text-sm">
+                    Express
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-primary">
+                  Rp{feeExpress.toLocaleString("id-ID")}
+                </span>
+              </div>
+              <p className="text-xs text-foreground/60 mt-1.5 ml-6">
+                Pengiriman prioritas. Pesanan langsung disiapkan begitu
+                dikonfirmasi, tanpa menunggu rute pengantaran lainnya.
+              </p>
+            </label>
           </div>
+
+          <p className="text-xs text-foreground/50 mt-2">
+            Estimasi waktu tiba akan dikonfirmasi melalui WhatsApp.
+          </p>
         </div>
 
         <div>
@@ -164,9 +261,23 @@ Terima kasih 🙏`;
           </div>
         </div>
 
-        <div className="flex justify-between font-bold text-lg text-foreground border-t border-border pt-4">
-          <span>Total Pesanan</span>
-          <span>Rp{subtotal.toLocaleString("id-ID")}</span>
+        <div className="border-t border-border pt-4 flex flex-col gap-1.5">
+          <div className="flex justify-between text-sm text-foreground/70">
+            <span>Subtotal</span>
+            <span>Rp{subtotal.toLocaleString("id-ID")}</span>
+          </div>
+          <div className="flex justify-between text-sm text-foreground/70">
+            <span>Ongkir ({deliveryType === "EXPRESS" ? "Express" : "Reguler"})</span>
+            <span>
+              {deliveryFee > 0
+                ? `Rp${deliveryFee.toLocaleString("id-ID")}`
+                : "Gratis"}
+            </span>
+          </div>
+          <div className="flex justify-between font-bold text-lg text-foreground mt-1">
+            <span>Total</span>
+            <span>Rp{total.toLocaleString("id-ID")}</span>
+          </div>
         </div>
 
         <button
