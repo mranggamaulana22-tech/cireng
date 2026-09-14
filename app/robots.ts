@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/admin/",
     },
-    sitemap: "https://cireng-five.vercel.app/sitemap.xml",
+    sitemap: "https://cirengseyegan.me/sitemap.xml",
   };
 }
