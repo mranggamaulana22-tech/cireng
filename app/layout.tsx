@@ -7,7 +7,7 @@ import { CartProvider } from "./context/CartContext";
 
 export const metadata: Metadata = {
   title: {
-    default: "Cireng A&R Seyegan - Jajanan Cireng Enak di Seyegan",
+    default: "Cireng A&R Seyegan - Delivery Cireng Area Seyegan",
     template: "%s | Cireng A&R Seyegan",
   },
   description:
