@@ -27,7 +27,7 @@ export default function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
-            className="relative flex flex-col items-center gap-0.5 px-4 py-1"
+            className="relative flex flex-col items-center gap-0.5 px-4 py-1 rounded-xl transition-transform duration-150 active:scale-90 active:bg-foreground/5"
           >
             <Icon
               size={22}
