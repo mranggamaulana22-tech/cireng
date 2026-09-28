@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   verification: {
     google: "gzNcRUCwD9xkS6t91cEk5oNZp3aD92yFazwdPlHv2hA",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

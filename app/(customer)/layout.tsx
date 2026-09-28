@@ -10,7 +10,9 @@ export default function CustomerLayout({
   return (
     <>
       <Header />
-      <div className="flex-1 pb-20">{children}</div>
+      <div className="flex-1 pb-[calc(10rem+env(safe-area-inset-bottom))]">
+        {children}
+      </div>
       <CartStickyBar />
       <BottomNav />
     </>
