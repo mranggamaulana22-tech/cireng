@@ -3,12 +3,14 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getSeasoningLabel } from "../../../data/orderUtils";
 
 type OrderRecord = {
   orderCode: string;
   name: string;
   items: { id: string; name: string; price: number; quantity: number }[];
   subtotal: number;
+  seasonings?: string[];
   payment: string;
   note: string;
   createdAt: string;
@@ -73,6 +75,13 @@ export default function OrderStatusPage() {
         <div className="flex justify-between text-sm">
           <span className="text-foreground/60">Pembayaran</span>
           <span className="text-foreground font-medium">{order.payment}</span>
+        </div>
+
+        <div className="flex justify-between text-sm gap-4">
+          <span className="text-foreground/60">Bumbu</span>
+          <span className="text-foreground font-medium text-right">
+            {order.seasonings ? getSeasoningLabel(order.seasonings) : "-"}
+          </span>
         </div>
 
         <div className="border-t border-border my-2" />

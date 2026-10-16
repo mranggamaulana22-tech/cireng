@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../context/CartContext";
-import { generateOrderCode, BUSINESS_WHATSAPP_NUMBER } from "../../data/orderUtils";
+import {
+  generateOrderCode,
+  BUSINESS_WHATSAPP_NUMBER,
+  SEASONINGS,
+  MAX_SEASONINGS,
+  NO_SEASONING_ID,
+  getSeasoningLabel,
+} from "../../data/orderUtils";
 import { createClient } from "../../lib/supabase/client";
 
 const NAME_STORAGE_KEY = "cireng-ar-customer-name";
@@ -19,6 +26,7 @@ export default function CheckoutPage() {
   const [note, setNote] = useState("");
   const [payment, setPayment] = useState<"COD" | "QRIS">("COD");
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("REGULER");
+  const [seasonings, setSeasonings] = useState<string[]>([]);
 
   const [feeRegular, setFeeRegular] = useState(0);
   const [feeExpress, setFeeExpress] = useState(5000);
@@ -55,9 +63,35 @@ export default function CheckoutPage() {
   const deliveryFee = deliveryType === "EXPRESS" ? feeExpress : feeRegular;
   const total = subtotal + deliveryFee;
 
+  const noSeasoning = seasonings.includes(NO_SEASONING_ID);
+  const seasoningLimitReached =
+    !noSeasoning && seasonings.length >= MAX_SEASONINGS;
+
+  function toggleNoSeasoning() {
+    setSeasonings((prev) => (prev.includes(NO_SEASONING_ID) ? [] : [NO_SEASONING_ID]));
+  }
+
+  function toggleSeasoning(id: string) {
+    setSeasonings((prev) => {
+      const current = prev.filter((s) => s !== NO_SEASONING_ID);
+      if (current.includes(id)) {
+        return current.filter((s) => s !== id);
+      }
+      if (current.length >= MAX_SEASONINGS) {
+        return current;
+      }
+      return [...current, id];
+    });
+  }
+
   function handleSubmit() {
     if (!name.trim()) {
       alert("Nama wajib diisi ya.");
+      return;
+    }
+
+    if (seasonings.length === 0) {
+      alert("Pilih bumbu dulu ya (atau pilih Tanpa bumbu).");
       return;
     }
 
@@ -68,6 +102,8 @@ export default function CheckoutPage() {
     const itemLines = items
       .map((item) => `- ${item.name} x${item.quantity}`)
       .join("\n");
+
+    const seasoningLabel = getSeasoningLabel(seasonings);
 
     const deliveryLabel =
       deliveryType === "EXPRESS"
@@ -85,6 +121,8 @@ Nama: ${name}
 
 Pesanan:
 ${itemLines}
+
+Bumbu: ${seasoningLabel}
 
 Subtotal: Rp${subtotal.toLocaleString("id-ID")}
 Pengiriman: ${deliveryLabel}
@@ -105,6 +143,7 @@ Terima kasih 🙏`;
       name,
       items,
       subtotal,
+      seasonings,
       deliveryType,
       deliveryFee,
       total,
@@ -150,8 +189,63 @@ Terima kasih 🙏`;
         </div>
 
         <div>
+          <h2 className="font-semibold text-foreground mb-1">
+            2. Pilih Bumbu
+          </h2>
+          <p className="text-xs text-foreground/50 mb-2">
+            Pilih 1 atau maksimal {MAX_SEASONINGS} bumbu untuk pesanan.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            {SEASONINGS.map((seasoning) => {
+              const checked = seasonings.includes(seasoning.id);
+              const disabled = noSeasoning || (!checked && seasoningLimitReached);
+              return (
+                <label
+                  key={seasoning.id}
+                  className={`border rounded-md p-3 flex items-center gap-2 transition-colors ${
+                    checked ? "border-primary bg-primary/5" : "border-border"
+                  } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => toggleSeasoning(seasoning.id)}
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {seasoning.name}
+                  </span>
+                </label>
+              );
+            })}
+
+            <label
+              className={`border rounded-md p-3 flex items-center gap-2 cursor-pointer transition-colors ${
+                noSeasoning ? "border-primary bg-primary/5" : "border-border"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={noSeasoning}
+                onChange={toggleNoSeasoning}
+              />
+              <span className="text-sm font-medium text-foreground">
+                Tanpa bumbu
+              </span>
+            </label>
+          </div>
+
+          <p className="text-xs text-foreground/50 mt-2">
+            {noSeasoning
+              ? "Pesanan tanpa bumbu."
+              : `Dipilih ${seasonings.length}/${MAX_SEASONINGS}.`}
+          </p>
+        </div>
+
+        <div>
           <h2 className="font-semibold text-foreground mb-2">
-            2. Jenis Pengiriman
+            3. Jenis Pengiriman
           </h2>
 
           <div className="flex flex-col gap-2">
@@ -222,12 +316,12 @@ Terima kasih 🙏`;
 
         <div>
           <h2 className="font-semibold text-foreground mb-2">
-            3. Catatan untuk Penjual
+            4. Catatan untuk Penjual
           </h2>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Contoh: rumah pagar hitam, titip tanpa cabai, dsb."
+            placeholder="Contoh: rumah pagar hitam, saus nya dipisah, dsb."
             rows={3}
             className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground"
           />
@@ -239,7 +333,7 @@ Terima kasih 🙏`;
 
         <div>
           <h2 className="font-semibold text-foreground mb-2">
-            4. Pembayaran
+            5. Pembayaran
           </h2>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm text-foreground">
