@@ -9,4 +9,6 @@ export type Product = {
   image_url: string | null;
   is_available: boolean;
   category: ProductCategory;
+  // true = saat dipesan, pelanggan memilih Es atau Hangat (popup)
+  has_temperature: boolean;
 };

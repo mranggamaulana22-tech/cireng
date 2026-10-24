@@ -13,6 +13,7 @@ type Product = {
   is_available: boolean;
   is_featured: boolean;
   category: string;
+  has_temperature: boolean;
 };
 
 const emptyForm = {
@@ -22,6 +23,7 @@ const emptyForm = {
   description: "",
   image_url: "",
   category: "makanan",
+  has_temperature: false,
 };
 
 export default function AdminProductsPage() {
@@ -61,6 +63,7 @@ export default function AdminProductsPage() {
       description: product.description ?? "",
       image_url: product.image_url ?? "",
       category: product.category ?? "makanan",
+      has_temperature: product.has_temperature ?? false,
     });
     setShowForm(true);
   }
@@ -80,6 +83,7 @@ export default function AdminProductsPage() {
       description: form.description,
       image_url: form.image_url.trim() || null,
       category: form.category,
+      has_temperature: form.category === "minuman" && form.has_temperature,
     };
 
     if (editingId) {
@@ -190,13 +194,33 @@ export default function AdminProductsPage() {
             <p className="text-sm text-foreground/70 mb-1">Kategori</p>
             <select
               value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  category: e.target.value,
+                  // minuman baru: pilihan es/hangat aktif secara default
+                  has_temperature: e.target.value === "minuman",
+                })
+              }
               className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
             >
               <option value="makanan">Makanan</option>
               <option value="minuman">Minuman</option>
             </select>
           </div>
+
+          {form.category === "minuman" && (
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={form.has_temperature}
+                onChange={(e) =>
+                  setForm({ ...form, has_temperature: e.target.checked })
+                }
+              />
+              Ada pilihan Es / Hangat (muncul popup saat dipesan)
+            </label>
+          )}
 
           <div>
             <p className="text-sm text-foreground/70 mb-1">
@@ -247,6 +271,7 @@ export default function AdminProductsPage() {
               </p>
               <p className="text-xs text-foreground/50">
                 {product.category === "minuman" ? "Minuman" : "Makanan"}
+                {product.has_temperature ? " · Es/Hangat" : ""}
               </p>
               <p
                 className={`text-xs mt-1 font-medium ${

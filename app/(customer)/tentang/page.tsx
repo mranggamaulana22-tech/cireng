@@ -1,4 +1,3 @@
-
 export const metadata = {
   title: "Tentang Kami",
   description:
@@ -23,7 +22,9 @@ export default function TentangPage() {
           Semua produk kami dibuat dengan resep rumahan, tanpa bahan
           pengawet, dan selalu fresh setiap harinya. Dari cireng
           isi ayam suwir, bakso, sosis, keju, hingga cipuk dan telur gulung —
-          setiap produk kami buat dengan standar rasa yang konsisten.
+          setiap produk kami buat dengan standar rasa yang konsisten. Untuk
+          menemani jajanan, kami juga menyediakan minuman yang bisa dipilih
+          es atau hangat.
         </p>
         <p>
           Website ini kami bangun supaya pelanggan yang tidak sempat mampir

@@ -6,6 +6,7 @@ import { useCart } from "../../context/CartContext";
 import ProductImage from "../../components/ProductImage";
 
 type TabKey = "semua" | ProductCategory;
+type Temperature = "Es" | "Hangat";
 
 const tabs: { key: TabKey; label: string }[] = [
   { key: "semua", label: "Semua" },
@@ -16,6 +17,8 @@ const tabs: { key: TabKey; label: string }[] = [
 export default function MenuList({ products }: { products: Product[] }) {
   const { items, addItem, updateQuantity } = useCart();
   const [activeTab, setActiveTab] = useState<TabKey>("semua");
+  // Minuman yang sedang dipilih es/hangat-nya (popup terbuka kalau tidak null)
+  const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
 
   const hasDrinks = products.some((p) => p.category === "minuman");
   const visibleProducts =
@@ -23,9 +26,19 @@ export default function MenuList({ products }: { products: Product[] }) {
       ? products
       : products.filter((p) => p.category === activeTab);
 
+  // Jumlah untuk produk biasa (id keranjang = id produk)
   function getQty(productId: number) {
     const found = items.find((item) => item.id === String(productId));
     return found ? found.quantity : 0;
+  }
+
+  // Jumlah gabungan Es + Hangat untuk produk yang punya pilihan suhu
+  // (id keranjang = "<id produk>-es" / "<id produk>-hangat")
+  function getVariantQty(productId: number) {
+    const prefix = `${productId}-`;
+    return items
+      .filter((item) => item.id.startsWith(prefix))
+      .reduce((sum, item) => sum + item.quantity, 0);
   }
 
   function increase(product: Product) {
@@ -45,6 +58,16 @@ export default function MenuList({ products }: { products: Product[] }) {
   function decrease(productId: number) {
     const currentQty = getQty(productId);
     updateQuantity(String(productId), currentQty - 1);
+  }
+
+  function addWithTemperature(product: Product, temperature: Temperature) {
+    addItem({
+      id: `${product.id}-${temperature.toLowerCase()}`,
+      name: `${product.name} (${temperature})`,
+      price: product.price,
+      category: product.category,
+    });
+    setPickerProduct(null);
   }
 
   return (
@@ -80,6 +103,7 @@ export default function MenuList({ products }: { products: Product[] }) {
       <div className="grid grid-cols-2 gap-3">
         {visibleProducts.map((product) => {
           const qty = getQty(product.id);
+          const variantQty = getVariantQty(product.id);
 
           return (
             <div
@@ -108,7 +132,23 @@ export default function MenuList({ products }: { products: Product[] }) {
                 )}
               </div>
 
-              {product.is_available && (
+              {product.is_available && product.has_temperature && (
+                <div className="mt-3">
+                  {variantQty > 0 && (
+                    <p className="text-xs text-foreground/60 mb-1.5 text-center">
+                      Di keranjang: {variantQty}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setPickerProduct(product)}
+                    className="w-full py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform"
+                  >
+                    + Pilih
+                  </button>
+                </div>
+              )}
+
+              {product.is_available && !product.has_temperature && (
                 <div className="flex items-center justify-between mt-3 py-1">
                   <button
                     onClick={() => decrease(product.id)}
@@ -117,7 +157,7 @@ export default function MenuList({ products }: { products: Product[] }) {
                   >
                     −
                   </button>
-                  <span className="text-center text-foreground font-semibold text-sm min-w-[20px]">
+                  <span className="text-center text-foreground font-semibold text-sm min-w-5">
                     {qty}
                   </span>
                   <button
@@ -132,6 +172,49 @@ export default function MenuList({ products }: { products: Product[] }) {
           );
         })}
       </div>
+
+      {pickerProduct && (
+        <div
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-6 pb-16"
+          onClick={() => setPickerProduct(null)}
+        >
+          <div
+            className="w-full max-w-xs bg-background rounded-2xl p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="font-semibold text-foreground">
+              {pickerProduct.name}
+            </p>
+            <p className="text-xs text-foreground/60 mt-0.5 mb-3">
+              Mau yang es atau hangat?
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => addWithTemperature(pickerProduct, "Es")}
+                className="py-3 rounded-lg border border-primary/40 bg-primary/5 text-foreground text-sm font-semibold active:scale-95 transition-transform"
+              >
+                <span className="block text-xl mb-0.5">🧊</span>
+                Es
+              </button>
+              <button
+                onClick={() => addWithTemperature(pickerProduct, "Hangat")}
+                className="py-3 rounded-lg border border-primary/40 bg-primary/5 text-foreground text-sm font-semibold active:scale-95 transition-transform"
+              >
+                <span className="block text-xl mb-0.5">☕</span>
+                Hangat
+              </button>
+            </div>
+
+            <button
+              onClick={() => setPickerProduct(null)}
+              className="mt-2 w-full py-1.5 text-xs text-foreground/60"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
