@@ -1,14 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext";
-
-const MINIMUM_ORDER = 10000;
+import { createClient } from "../../lib/supabase/client";
+import {
+  FREE_DELIVERY_THRESHOLD,
+  getDeliveryFee,
+} from "../../data/orderUtils";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, subtotal } = useCart();
+  const supabase = createClient();
 
-  const isBelowMinimum = subtotal < MINIMUM_ORDER;
+  const [feeRegular, setFeeRegular] = useState(0);
+
+  useEffect(() => {
+    async function loadFee() {
+      const { data } = await supabase
+        .from("store_status")
+        .select("delivery_fee_regular")
+        .limit(1)
+        .single();
+
+      if (data) {
+        setFeeRegular(data.delivery_fee_regular ?? 0);
+      }
+    }
+    loadFee();
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -24,6 +44,18 @@ export default function CartPage() {
       </main>
     );
   }
+
+  // Estimasi ongkir Reguler. Express bisa dipilih di halaman checkout.
+  const deliveryFee = getDeliveryFee(subtotal, "REGULER", feeRegular, 0);
+  const total = subtotal + deliveryFee;
+
+  const remainingForCheaper = FREE_DELIVERY_THRESHOLD - subtotal;
+  const feeAtThreshold = getDeliveryFee(
+    FREE_DELIVERY_THRESHOLD,
+    "REGULER",
+    feeRegular,
+    0
+  );
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
@@ -77,37 +109,37 @@ export default function CartPage() {
           <span>Subtotal</span>
           <span>Rp{subtotal.toLocaleString("id-ID")}</span>
         </div>
-        <div className="flex justify-between text-sm text-success">
-          <span>Delivery</span>
-          <span>Gratis</span>
+        <div
+          className={`flex justify-between text-sm ${
+            deliveryFee > 0 ? "text-foreground/70" : "text-success"
+          }`}
+        >
+          <span>Ongkir (Reguler)</span>
+          <span>
+            {deliveryFee > 0
+              ? `Rp${deliveryFee.toLocaleString("id-ID")}`
+              : "Gratis"}
+          </span>
         </div>
         <div className="flex justify-between font-bold text-lg text-foreground">
           <span>Total</span>
-          <span>Rp{subtotal.toLocaleString("id-ID")}</span>
+          <span>Rp{total.toLocaleString("id-ID")}</span>
         </div>
       </div>
 
-      {isBelowMinimum && (
+      {remainingForCheaper > 0 && deliveryFee > feeAtThreshold && (
         <p className="mt-4 text-sm text-center text-primary bg-primary/10 border border-primary/30 rounded-md py-2 px-3">
-          Minimum order delivery adalah Rp{MINIMUM_ORDER.toLocaleString("id-ID")}.
+          Tambah Rp{remainingForCheaper.toLocaleString("id-ID")} lagi untuk{" "}
+          {feeAtThreshold === 0 ? "gratis ongkir" : "ongkir lebih murah"}.
         </p>
       )}
 
-      {isBelowMinimum ? (
-        <button
-          disabled
-          className="mt-4 w-full py-3 rounded-md bg-primary text-primary-foreground font-semibold opacity-40 cursor-not-allowed"
-        >
-          Checkout
-        </button>
-      ) : (
-        <Link
-          href="/checkout"
-          className="mt-4 block w-full py-3 rounded-md bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 transition-opacity"
-        >
-          Checkout
-        </Link>
-      )}
+      <Link
+        href="/checkout"
+        className="mt-4 block w-full py-3 rounded-md bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 transition-opacity"
+      >
+        Checkout
+      </Link>
     </main>
   );
 }

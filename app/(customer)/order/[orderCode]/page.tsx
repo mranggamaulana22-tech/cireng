@@ -11,6 +11,9 @@ type OrderRecord = {
   items: { id: string; name: string; price: number; quantity: number }[];
   subtotal: number;
   seasonings?: string[];
+  deliveryType?: "REGULER" | "EXPRESS";
+  deliveryFee?: number;
+  total?: number;
   payment: string;
   note: string;
   createdAt: string;
@@ -58,6 +61,11 @@ export default function OrderStatusPage() {
     );
   }
 
+  // Pesanan lama (sebelum ada ongkir di record) jatuh kembali ke subtotal.
+  const deliveryFee = order.deliveryFee ?? 0;
+  const total = order.total ?? order.subtotal + deliveryFee;
+  const hasSeasoning = order.seasonings && order.seasonings.length > 0;
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -77,12 +85,23 @@ export default function OrderStatusPage() {
           <span className="text-foreground font-medium">{order.payment}</span>
         </div>
 
-        <div className="flex justify-between text-sm gap-4">
-          <span className="text-foreground/60">Bumbu</span>
-          <span className="text-foreground font-medium text-right">
-            {order.seasonings ? getSeasoningLabel(order.seasonings) : "-"}
-          </span>
-        </div>
+        {order.deliveryType && (
+          <div className="flex justify-between text-sm">
+            <span className="text-foreground/60">Pengiriman</span>
+            <span className="text-foreground font-medium">
+              {order.deliveryType === "EXPRESS" ? "Express" : "Reguler"}
+            </span>
+          </div>
+        )}
+
+        {hasSeasoning && (
+          <div className="flex justify-between text-sm gap-4">
+            <span className="text-foreground/60">Bumbu</span>
+            <span className="text-foreground font-medium text-right">
+              {getSeasoningLabel(order.seasonings!)}
+            </span>
+          </div>
+        )}
 
         <div className="border-t border-border my-2" />
 
@@ -99,9 +118,21 @@ export default function OrderStatusPage() {
 
         <div className="border-t border-border my-2" />
 
+        <div className="flex justify-between text-sm text-foreground/70">
+          <span>Subtotal</span>
+          <span>Rp{order.subtotal.toLocaleString("id-ID")}</span>
+        </div>
+        <div className="flex justify-between text-sm text-foreground/70">
+          <span>Ongkir</span>
+          <span>
+            {deliveryFee > 0
+              ? `Rp${deliveryFee.toLocaleString("id-ID")}`
+              : "Gratis"}
+          </span>
+        </div>
         <div className="flex justify-between font-bold text-foreground">
           <span>Total</span>
-          <span>Rp{order.subtotal.toLocaleString("id-ID")}</span>
+          <span>Rp{total.toLocaleString("id-ID")}</span>
         </div>
       </div>
 

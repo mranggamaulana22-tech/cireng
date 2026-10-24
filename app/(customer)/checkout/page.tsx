@@ -10,12 +10,13 @@ import {
   MAX_SEASONINGS,
   NO_SEASONING_ID,
   getSeasoningLabel,
+  getDeliveryFee,
+  FREE_DELIVERY_THRESHOLD,
+  type DeliveryType,
 } from "../../data/orderUtils";
 import { createClient } from "../../lib/supabase/client";
 
 const NAME_STORAGE_KEY = "cireng-ar-customer-name";
-
-type DeliveryType = "REGULER" | "EXPRESS";
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
@@ -60,12 +61,33 @@ export default function CheckoutPage() {
     }
   }, [items, router]);
 
-  const deliveryFee = deliveryType === "EXPRESS" ? feeExpress : feeRegular;
+  // Bumbu hanya relevan untuk makanan. Item tanpa category dianggap makanan
+  // (keranjang lama). Pesanan berisi minuman saja tidak diminta memilih bumbu.
+  const needsSeasoning = items.some((item) => item.category !== "minuman");
+
+  // Ongkir Reguler & Express dihitung terpisah supaya harganya bisa ditampilkan
+  // di tiap pilihan pengiriman.
+  const regularFee = getDeliveryFee(subtotal, "REGULER", feeRegular, feeExpress);
+  const expressFee = getDeliveryFee(subtotal, "EXPRESS", feeRegular, feeExpress);
+  const deliveryFee = deliveryType === "EXPRESS" ? expressFee : regularFee;
   const total = subtotal + deliveryFee;
+
+  const remainingForCheaper = FREE_DELIVERY_THRESHOLD - subtotal;
+  const regularFeeAtThreshold = getDeliveryFee(
+    FREE_DELIVERY_THRESHOLD,
+    "REGULER",
+    feeRegular,
+    feeExpress
+  );
 
   const noSeasoning = seasonings.includes(NO_SEASONING_ID);
   const seasoningLimitReached =
     !noSeasoning && seasonings.length >= MAX_SEASONINGS;
+
+  // Nomor langkah menyesuaikan: langkah bumbu hilang kalau tidak dibutuhkan.
+  const stepDelivery = needsSeasoning ? 3 : 2;
+  const stepNote = stepDelivery + 1;
+  const stepPayment = stepDelivery + 2;
 
   function toggleNoSeasoning() {
     setSeasonings((prev) => (prev.includes(NO_SEASONING_ID) ? [] : [NO_SEASONING_ID]));
@@ -90,7 +112,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (seasonings.length === 0) {
+    if (needsSeasoning && seasonings.length === 0) {
       alert("Pilih bumbu dulu ya (atau pilih Tanpa bumbu).");
       return;
     }
@@ -103,13 +125,16 @@ export default function CheckoutPage() {
       .map((item) => `- ${item.name} x${item.quantity}`)
       .join("\n");
 
-    const seasoningLabel = getSeasoningLabel(seasonings);
+    const finalSeasonings = needsSeasoning ? seasonings : [];
+    const seasoningLine = needsSeasoning
+      ? `Bumbu: ${getSeasoningLabel(finalSeasonings)}\n\n`
+      : "";
 
     const deliveryLabel =
       deliveryType === "EXPRESS"
-        ? `Express (Rp${feeExpress.toLocaleString("id-ID")})`
-        : feeRegular > 0
-        ? `Reguler (Rp${feeRegular.toLocaleString("id-ID")})`
+        ? `Express (Rp${expressFee.toLocaleString("id-ID")})`
+        : regularFee > 0
+        ? `Reguler (Rp${regularFee.toLocaleString("id-ID")})`
         : "Reguler (Gratis)";
 
     const message = `Halo Cireng A & R 👋
@@ -122,9 +147,7 @@ Nama: ${name}
 Pesanan:
 ${itemLines}
 
-Bumbu: ${seasoningLabel}
-
-Subtotal: Rp${subtotal.toLocaleString("id-ID")}
+${seasoningLine}Subtotal: Rp${subtotal.toLocaleString("id-ID")}
 Pengiriman: ${deliveryLabel}
 Total: Rp${total.toLocaleString("id-ID")}
 Pembayaran: ${payment}
@@ -143,7 +166,7 @@ Terima kasih 🙏`;
       name,
       items,
       subtotal,
-      seasonings,
+      seasonings: finalSeasonings,
       deliveryType,
       deliveryFee,
       total,
@@ -188,64 +211,67 @@ Terima kasih 🙏`;
           </p>
         </div>
 
-        <div>
-          <h2 className="font-semibold text-foreground mb-1">
-            2. Pilih Bumbu
-          </h2>
-          <p className="text-xs text-foreground/50 mb-2">
-            Pilih 1 atau maksimal {MAX_SEASONINGS} bumbu untuk pesanan.
-          </p>
+        {needsSeasoning && (
+          <div>
+            <h2 className="font-semibold text-foreground mb-1">
+              2. Pilih Bumbu
+            </h2>
+            <p className="text-xs text-foreground/50 mb-2">
+              Pilih 1 atau maksimal {MAX_SEASONINGS} bumbu untuk pesanan
+              makanan.
+            </p>
 
-          <div className="flex flex-col gap-2">
-            {SEASONINGS.map((seasoning) => {
-              const checked = seasonings.includes(seasoning.id);
-              const disabled = noSeasoning || (!checked && seasoningLimitReached);
-              return (
-                <label
-                  key={seasoning.id}
-                  className={`border rounded-md p-3 flex items-center gap-2 transition-colors ${
-                    checked ? "border-primary bg-primary/5" : "border-border"
-                  } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={disabled}
-                    onChange={() => toggleSeasoning(seasoning.id)}
-                  />
-                  <span className="text-sm font-medium text-foreground">
-                    {seasoning.name}
-                  </span>
-                </label>
-              );
-            })}
+            <div className="flex flex-col gap-2">
+              {SEASONINGS.map((seasoning) => {
+                const checked = seasonings.includes(seasoning.id);
+                const disabled = noSeasoning || (!checked && seasoningLimitReached);
+                return (
+                  <label
+                    key={seasoning.id}
+                    className={`border rounded-md p-3 flex items-center gap-2 transition-colors ${
+                      checked ? "border-primary bg-primary/5" : "border-border"
+                    } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => toggleSeasoning(seasoning.id)}
+                    />
+                    <span className="text-sm font-medium text-foreground">
+                      {seasoning.name}
+                    </span>
+                  </label>
+                );
+              })}
 
-            <label
-              className={`border rounded-md p-3 flex items-center gap-2 cursor-pointer transition-colors ${
-                noSeasoning ? "border-primary bg-primary/5" : "border-border"
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={noSeasoning}
-                onChange={toggleNoSeasoning}
-              />
-              <span className="text-sm font-medium text-foreground">
-                Tanpa bumbu
-              </span>
-            </label>
+              <label
+                className={`border rounded-md p-3 flex items-center gap-2 cursor-pointer transition-colors ${
+                  noSeasoning ? "border-primary bg-primary/5" : "border-border"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={noSeasoning}
+                  onChange={toggleNoSeasoning}
+                />
+                <span className="text-sm font-medium text-foreground">
+                  Tanpa bumbu
+                </span>
+              </label>
+            </div>
+
+            <p className="text-xs text-foreground/50 mt-2">
+              {noSeasoning
+                ? "Pesanan tanpa bumbu."
+                : `Dipilih ${seasonings.length}/${MAX_SEASONINGS}.`}
+            </p>
           </div>
-
-          <p className="text-xs text-foreground/50 mt-2">
-            {noSeasoning
-              ? "Pesanan tanpa bumbu."
-              : `Dipilih ${seasonings.length}/${MAX_SEASONINGS}.`}
-          </p>
-        </div>
+        )}
 
         <div>
           <h2 className="font-semibold text-foreground mb-2">
-            3. Jenis Pengiriman
+            {stepDelivery}. Jenis Pengiriman
           </h2>
 
           <div className="flex flex-col gap-2">
@@ -268,15 +294,17 @@ Terima kasih 🙏`;
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-primary">
-                  {feeRegular > 0
-                    ? `Rp${feeRegular.toLocaleString("id-ID")}`
+                  {regularFee > 0
+                    ? `Rp${regularFee.toLocaleString("id-ID")}`
                     : "Gratis"}
                 </span>
               </div>
               <p className="text-xs text-foreground/60 mt-1.5 ml-6">
-                Gratis ongkir selama masa promo launching. Pengiriman
-                mengikuti rute pengantaran, jadi persiapan bisa sedikit lebih
-                lama karena digabung dengan pesanan lain di rute yang sama.
+                Gratis ongkir untuk belanja mulai Rp
+                {FREE_DELIVERY_THRESHOLD.toLocaleString("id-ID")}; di bawah itu
+                dikenai ongkir. Pengiriman mengikuti rute pengantaran, jadi
+                persiapan bisa sedikit lebih lama karena digabung dengan
+                pesanan lain di rute yang sama.
               </p>
             </label>
 
@@ -299,7 +327,7 @@ Terima kasih 🙏`;
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-primary">
-                  Rp{feeExpress.toLocaleString("id-ID")}
+                  Rp{expressFee.toLocaleString("id-ID")}
                 </span>
               </div>
               <p className="text-xs text-foreground/60 mt-1.5 ml-6">
@@ -316,7 +344,7 @@ Terima kasih 🙏`;
 
         <div>
           <h2 className="font-semibold text-foreground mb-2">
-            4. Catatan untuk Penjual
+            {stepNote}. Catatan untuk Penjual
           </h2>
           <textarea
             value={note}
@@ -333,7 +361,7 @@ Terima kasih 🙏`;
 
         <div>
           <h2 className="font-semibold text-foreground mb-2">
-            5. Pembayaran
+            {stepPayment}. Pembayaran
           </h2>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm text-foreground">
@@ -372,6 +400,19 @@ Terima kasih 🙏`;
             <span>Total</span>
             <span>Rp{total.toLocaleString("id-ID")}</span>
           </div>
+
+          {deliveryType === "REGULER" &&
+            remainingForCheaper > 0 &&
+            regularFee > regularFeeAtThreshold && (
+              <p className="mt-2 text-xs text-center text-primary bg-primary/10 border border-primary/30 rounded-md py-2 px-3">
+                Tambah Rp{remainingForCheaper.toLocaleString("id-ID")} lagi
+                untuk{" "}
+                {regularFeeAtThreshold === 0
+                  ? "gratis ongkir"
+                  : "ongkir lebih murah"}
+                .
+              </p>
+            )}
         </div>
 
         <button

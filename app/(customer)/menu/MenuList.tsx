@@ -35,6 +35,7 @@ export default function MenuList({ products }: { products: Product[] }) {
         id: String(product.id),
         name: product.name,
         price: product.price,
+        category: product.category,
       });
     } else {
       updateQuantity(String(product.id), currentQty + 1);

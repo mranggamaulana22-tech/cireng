@@ -8,7 +8,29 @@ export function generateOrderCode(): string {
   return `AR-${yy}${mm}${dd}-${random}`;
 }
 
-export const BUSINESS_WHATSAPP_NUMBER = "6288216244145"; 
+export const BUSINESS_WHATSAPP_NUMBER = "6288216244145";
+
+// ===== Ongkir =====
+// Belanja di bawah FREE_DELIVERY_THRESHOLD tetap bisa dipesan,
+// tapi dikenai ongkir minimal SMALL_ORDER_DELIVERY_FEE (untuk Reguler).
+export const FREE_DELIVERY_THRESHOLD = 10000;
+export const SMALL_ORDER_DELIVERY_FEE = 2000;
+
+export type DeliveryType = "REGULER" | "EXPRESS";
+
+// feeRegular & feeExpress berasal dari tabel store_status (bisa diubah admin).
+export function getDeliveryFee(
+  subtotal: number,
+  deliveryType: DeliveryType,
+  feeRegular: number,
+  feeExpress: number
+): number {
+  if (subtotal <= 0) return 0;
+  if (deliveryType === "EXPRESS") return feeExpress;
+  return subtotal >= FREE_DELIVERY_THRESHOLD
+    ? feeRegular
+    : Math.max(feeRegular, SMALL_ORDER_DELIVERY_FEE);
+}
 
 // ===== Bumbu =====
 export const MAX_SEASONINGS = 2;

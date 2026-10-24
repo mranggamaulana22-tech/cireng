@@ -7,6 +7,9 @@ export type CartItem = {
   name: string;
   price: number;
   quantity: number;
+  // Opsional supaya keranjang lama (tanpa category) tetap valid.
+  // Item tanpa category dianggap "makanan".
+  category?: "makanan" | "minuman";
 };
 
 type CartContextType = {
