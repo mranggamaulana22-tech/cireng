@@ -9,8 +9,10 @@ type Product = {
   slug: string;
   price: number;
   description: string;
+  image_url: string | null;
   is_available: boolean;
   is_featured: boolean;
+  category: string;
 };
 
 const emptyForm = {
@@ -18,6 +20,8 @@ const emptyForm = {
   slug: "",
   price: "",
   description: "",
+  image_url: "",
+  category: "makanan",
 };
 
 export default function AdminProductsPage() {
@@ -55,6 +59,8 @@ export default function AdminProductsPage() {
       slug: product.slug,
       price: String(product.price),
       description: product.description ?? "",
+      image_url: product.image_url ?? "",
+      category: product.category ?? "makanan",
     });
     setShowForm(true);
   }
@@ -72,6 +78,8 @@ export default function AdminProductsPage() {
       slug: form.slug,
       price: Number(form.price),
       description: form.description,
+      image_url: form.image_url.trim() || null,
+      category: form.category,
     };
 
     if (editingId) {
@@ -178,6 +186,31 @@ export default function AdminProductsPage() {
             />
           </div>
 
+          <div>
+            <p className="text-sm text-foreground/70 mb-1">Kategori</p>
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+            >
+              <option value="makanan">Makanan</option>
+              <option value="minuman">Minuman</option>
+            </select>
+          </div>
+
+          <div>
+            <p className="text-sm text-foreground/70 mb-1">
+              URL Gambar (dari Supabase Storage, boleh kosong)
+            </p>
+            <input
+              type="text"
+              value={form.image_url}
+              onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+              placeholder="https://...supabase.co/storage/v1/object/public/product-images/..."
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+            />
+          </div>
+
           <div className="flex gap-2">
             <button
               onClick={() => setShowForm(false)}
@@ -211,6 +244,9 @@ export default function AdminProductsPage() {
               </p>
               <p className="text-sm text-foreground/60">
                 Rp{product.price.toLocaleString("id-ID")}
+              </p>
+              <p className="text-xs text-foreground/50">
+                {product.category === "minuman" ? "Minuman" : "Makanan"}
               </p>
               <p
                 className={`text-xs mt-1 font-medium ${

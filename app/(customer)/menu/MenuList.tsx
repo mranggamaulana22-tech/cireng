@@ -1,11 +1,27 @@
 "use client";
 
-import { Product } from "../../data/products";
+import { useState } from "react";
+import { Product, ProductCategory } from "../../data/products";
 import { useCart } from "../../context/CartContext";
 import ProductImage from "../../components/ProductImage";
 
+type TabKey = "semua" | ProductCategory;
+
+const tabs: { key: TabKey; label: string }[] = [
+  { key: "semua", label: "Semua" },
+  { key: "makanan", label: "Makanan" },
+  { key: "minuman", label: "Minuman" },
+];
+
 export default function MenuList({ products }: { products: Product[] }) {
   const { items, addItem, updateQuantity } = useCart();
+  const [activeTab, setActiveTab] = useState<TabKey>("semua");
+
+  const hasDrinks = products.some((p) => p.category === "minuman");
+  const visibleProducts =
+    activeTab === "semua"
+      ? products
+      : products.filter((p) => p.category === activeTab);
 
   function getQty(productId: number) {
     const found = items.find((item) => item.id === String(productId));
@@ -34,12 +50,34 @@ export default function MenuList({ products }: { products: Product[] }) {
     <main className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Menu</h1>
 
+      {hasDrinks && (
+        <div className="flex gap-2 mb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                activeTab === tab.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-border text-foreground/70"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {products.length === 0 && (
         <p className="text-foreground/60">Belum ada produk tersedia.</p>
       )}
 
+      {products.length > 0 && visibleProducts.length === 0 && (
+        <p className="text-foreground/60">Belum ada produk di kategori ini.</p>
+      )}
+
       <div className="grid grid-cols-2 gap-3">
-        {products.map((product) => {
+        {visibleProducts.map((product) => {
           const qty = getQty(product.id);
 
           return (

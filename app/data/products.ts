@@ -1,3 +1,5 @@
+export type ProductCategory = "makanan" | "minuman";
+
 export type Product = {
   id: number;
   name: string;
@@ -6,4 +8,5 @@ export type Product = {
   description: string;
   image_url: string | null;
   is_available: boolean;
+  category: ProductCategory;
 };
