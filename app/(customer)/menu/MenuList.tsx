@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Product, ProductCategory } from "../../data/products";
 import { useCart } from "../../context/CartContext";
 import ProductImage from "../../components/ProductImage";
@@ -29,6 +29,13 @@ export default function MenuList({ products }: { products: Product[] }) {
   const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
   const [temperature, setTemperature] = useState<Temperature | null>(null);
   const [drinkNote, setDrinkNote] = useState("");
+  // Area layar yang benar-benar terlihat (mengecil saat keyboard muncul),
+  // dipakai supaya popup tetap di tengah area yang terlihat.
+  const [viewportBox, setViewportBox] = useState<{
+    top: number;
+    height: number;
+    keyboardOpen: boolean;
+  } | null>(null);
 
   const hasDrinks = products.some((p) => p.category === "minuman");
   const visibleProducts =
@@ -70,6 +77,29 @@ export default function MenuList({ products }: { products: Product[] }) {
     updateQuantity(String(productId), currentQty - 1);
   }
 
+  useEffect(() => {
+    if (!pickerProduct) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    function update() {
+      const v = window.visualViewport;
+      if (!v) return;
+      setViewportBox({
+        top: v.offsetTop,
+        height: v.height,
+        keyboardOpen: window.innerHeight - v.height > 120,
+      });
+    }
+
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [pickerProduct]);
+
   function openPicker(product: Product) {
     setPickerProduct(product);
     setTemperature(null);
@@ -78,6 +108,7 @@ export default function MenuList({ products }: { products: Product[] }) {
 
   function closePicker() {
     setPickerProduct(null);
+    setViewportBox(null);
     setTemperature(null);
     setDrinkNote("");
   }
@@ -210,11 +241,18 @@ export default function MenuList({ products }: { products: Product[] }) {
 
       {pickerProduct && (
         <div
-          className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-6 pb-16"
+          className={`fixed left-0 right-0 z-100 flex overflow-y-auto bg-black/40 px-6 ${
+            viewportBox?.keyboardOpen ? "py-4" : "pt-4 pb-16"
+          }`}
+          style={
+            viewportBox
+              ? { top: viewportBox.top, height: viewportBox.height }
+              : { top: 0, bottom: 0 }
+          }
           onClick={closePicker}
         >
           <div
-            className="w-full max-w-xs bg-background rounded-2xl p-4 shadow-xl"
+            className="w-full max-w-xs m-auto bg-background rounded-2xl p-4 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="font-semibold text-foreground">
@@ -248,9 +286,19 @@ export default function MenuList({ products }: { products: Product[] }) {
               type="text"
               value={drinkNote}
               onChange={(e) => setDrinkNote(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                if (temperature) {
+                  confirmDrink();
+                } else {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              enterKeyHint="done"
               maxLength={NOTE_MAX_LENGTH}
               placeholder="Contoh: extra gula, es-nya dikit"
-              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-base"
             />
 
             <button
