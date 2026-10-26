@@ -18,7 +18,13 @@ export default function ProductImage({
 
   return (
     <div className="w-full aspect-square rounded-md overflow-hidden relative">
-      <Image src={src} alt={alt} fill className="object-cover" />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 50vw, 384px"
+        className="object-cover"
+      />
     </div>
   );
 }
