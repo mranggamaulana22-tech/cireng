@@ -14,11 +14,21 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "minuman", label: "Minuman" },
 ];
 
+const temperatures: { value: Temperature; icon: string }[] = [
+  { value: "Es", icon: "🧊" },
+  { value: "Hangat", icon: "☕" },
+];
+
+const NOTE_MAX_LENGTH = 60;
+
 export default function MenuList({ products }: { products: Product[] }) {
   const { items, addItem, updateQuantity } = useCart();
   const [activeTab, setActiveTab] = useState<TabKey>("semua");
-  // Minuman yang sedang dipilih es/hangat-nya (popup terbuka kalau tidak null)
+
+  // Popup pilihan minuman (terbuka kalau pickerProduct tidak null)
   const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
+  const [temperature, setTemperature] = useState<Temperature | null>(null);
+  const [drinkNote, setDrinkNote] = useState("");
 
   const hasDrinks = products.some((p) => p.category === "minuman");
   const visibleProducts =
@@ -32,8 +42,8 @@ export default function MenuList({ products }: { products: Product[] }) {
     return found ? found.quantity : 0;
   }
 
-  // Jumlah gabungan Es + Hangat untuk produk yang punya pilihan suhu
-  // (id keranjang = "<id produk>-es" / "<id produk>-hangat")
+  // Jumlah gabungan semua varian untuk produk yang punya pilihan suhu
+  // (id keranjang diawali "<id produk>-")
   function getVariantQty(productId: number) {
     const prefix = `${productId}-`;
     return items
@@ -60,14 +70,39 @@ export default function MenuList({ products }: { products: Product[] }) {
     updateQuantity(String(productId), currentQty - 1);
   }
 
-  function addWithTemperature(product: Product, temperature: Temperature) {
-    addItem({
-      id: `${product.id}-${temperature.toLowerCase()}`,
-      name: `${product.name} (${temperature})`,
-      price: product.price,
-      category: product.category,
-    });
+  function openPicker(product: Product) {
+    setPickerProduct(product);
+    setTemperature(null);
+    setDrinkNote("");
+  }
+
+  function closePicker() {
     setPickerProduct(null);
+    setTemperature(null);
+    setDrinkNote("");
+  }
+
+  function confirmDrink() {
+    if (!pickerProduct || !temperature) return;
+
+    const note = drinkNote.trim();
+
+    // Tulisan di keranjang / WhatsApp, contoh: "Teh Manis (Es, catatan: extra gula, es dikit)"
+    const details = [temperature, note ? `catatan: ${note}` : null]
+      .filter(Boolean)
+      .join(", ");
+
+    // Varian berbeda (suhu / catatan) menjadi baris terpisah di keranjang
+    const noteKey = note.toLowerCase().replace(/\s+/g, "-");
+    const id = `${pickerProduct.id}-${temperature.toLowerCase()}-${noteKey}`;
+
+    addItem({
+      id,
+      name: `${pickerProduct.name} (${details})`,
+      price: pickerProduct.price,
+      category: pickerProduct.category,
+    });
+    closePicker();
   }
 
   return (
@@ -140,7 +175,7 @@ export default function MenuList({ products }: { products: Product[] }) {
                     </p>
                   )}
                   <button
-                    onClick={() => setPickerProduct(product)}
+                    onClick={() => openPicker(product)}
                     className="w-full py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform"
                   >
                     + Pilih
@@ -176,7 +211,7 @@ export default function MenuList({ products }: { products: Product[] }) {
       {pickerProduct && (
         <div
           className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-6 pb-16"
-          onClick={() => setPickerProduct(null)}
+          onClick={closePicker}
         >
           <div
             className="w-full max-w-xs bg-background rounded-2xl p-4 shadow-xl"
@@ -185,30 +220,50 @@ export default function MenuList({ products }: { products: Product[] }) {
             <p className="font-semibold text-foreground">
               {pickerProduct.name}
             </p>
-            <p className="text-xs text-foreground/60 mt-0.5 mb-3">
-              Mau yang es atau hangat?
-            </p>
 
+            <p className="text-xs text-foreground/60 mt-2 mb-1.5">
+              Es atau hangat?
+            </p>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => addWithTemperature(pickerProduct, "Es")}
-                className="py-3 rounded-lg border border-primary/40 bg-primary/5 text-foreground text-sm font-semibold active:scale-95 transition-transform"
-              >
-                <span className="block text-xl mb-0.5">🧊</span>
-                Es
-              </button>
-              <button
-                onClick={() => addWithTemperature(pickerProduct, "Hangat")}
-                className="py-3 rounded-lg border border-primary/40 bg-primary/5 text-foreground text-sm font-semibold active:scale-95 transition-transform"
-              >
-                <span className="block text-xl mb-0.5">☕</span>
-                Hangat
-              </button>
+              {temperatures.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTemperature(t.value)}
+                  className={`py-2.5 rounded-lg border text-sm font-semibold active:scale-95 transition-all ${
+                    temperature === t.value
+                      ? "border-primary bg-primary/15 text-foreground"
+                      : "border-border text-foreground/70"
+                  }`}
+                >
+                  <span className="block text-lg mb-0.5">{t.icon}</span>
+                  {t.value}
+                </button>
+              ))}
             </div>
 
+            <p className="text-xs text-foreground/60 mt-3 mb-1.5">
+              Catatan (opsional)
+            </p>
+            <input
+              type="text"
+              value={drinkNote}
+              onChange={(e) => setDrinkNote(e.target.value)}
+              maxLength={NOTE_MAX_LENGTH}
+              placeholder="Contoh: extra gula, es-nya dikit"
+              className="w-full border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
+            />
+
             <button
-              onClick={() => setPickerProduct(null)}
-              className="mt-2 w-full py-1.5 text-xs text-foreground/60"
+              onClick={confirmDrink}
+              disabled={!temperature}
+              className="mt-4 w-full py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
+            >
+              {temperature ? "Tambah ke Keranjang" : "Pilih es atau hangat dulu"}
+            </button>
+
+            <button
+              onClick={closePicker}
+              className="mt-1 w-full py-1.5 text-xs text-foreground/60"
             >
               Batal
             </button>
